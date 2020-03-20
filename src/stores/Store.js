@@ -1,0 +1,382 @@
+import { observable, action } from "mobx";
+import api from "../api/api";
+import dataFarm from "../assets/data/dataFarm";
+import axios from "axios";
+import getMoonPhaseData from "../functions/getMoonPhaseData";
+import dayOrNight from "../functions/dayOrNight";
+import arrayRemove from "../functions/arrayRemove";
+import currentDay from "../functions/currentDay";
+import fetchUrlData from "../functions/fetchUrlData";
+
+class Store {
+  @observable fetchCity = {
+    error: "",
+    status: "Pending",
+    loading: true
+  };
+
+  @observable updateDefaultCity = {
+    error: "",
+    status: "Pending",
+    loading: true
+  };
+
+  @observable loadingChart = true;
+  @observable loadingMap = true;
+  @observable loadingHistorical = true;
+  @observable loadingGetStation = true;
+
+  //for test porpuses
+  @observable test = "hello world";
+
+  //object with the code of active sattion - get data from fecthHistoricalData()
+  @observable activeStation;
+
+  //Array object with all station - get data from getStation()
+  @observable arrayPushDataStation;
+
+  //Object with the searched city - get data from getWeatherData()
+  @observable activeCity;
+
+  //Object with the searched city timezone - get data from fetchTimezone()
+  @observable activeCityTimezone;
+
+  //Object with the searched city historical data - get data from fecthHistoricalData()
+  @observable historialWeatherData;
+
+  //Object with the searched city sunrise and sunnset data for the present day - get data from getSunRiseSunset()
+  @observable sunriseSunsetData;
+
+  //City coord - get data from fetchCoordinates()
+  @observable coordenatesLat;
+  @observable coordenatesLon;
+
+  //Get current date
+  @observable currentDateLocal;
+
+  //city name
+  @observable cityName;
+
+  //maxTempDataChart data chart
+  @observable maxTempDataChart;
+  @observable raindaysChartData;
+
+  @observable farmData = dataFarm;
+
+  //Loading
+  @observable isLoading;
+
+  //dayOrNight
+  @observable dayOrNightData;
+
+  @observable citiesDataArrayObs;
+
+  //CornovirusData
+  @observable getCoronaVirusDataArray;
+
+  //MoonPhase Object
+  @observable moonPhaseData;
+  //Object with the SET default city - localstorage
+  @observable defaultCity =
+    JSON.parse(localStorage.getItem("defaultCity")) || null;
+
+  //Object with the SET default Station - localstorage
+  @observable defaultStation =
+    JSON.parse(localStorage.getItem("defaultStation")) || null;
+
+  //Object with the SET list of added cities - localstorage
+  @observable citiesList = JSON.parse(localStorage.getItem("сitiesList")) || [];
+
+  constructor(cityName, activeCity) {
+    this.autoupdateDefaultCity(9000);
+    //this.cityName = "porto";
+  }
+
+  @action("get Weather")
+  getWeatherData = async () => {
+    if (!this.cityName && this.defaultCity) {
+      this.cityName = this.defaultCity;
+    } else if (!this.defaultCity && !this.cityName) {
+      this.cityName = "Lisboa";
+    }
+
+    let URLopenWeather = `${api.URL}q=${this.cityName}&units=metric&appid=${
+      api.openWeatherKey
+    }`;
+
+    this.fetchCity.error = "";
+    this.fetchCity.status = "Loading";
+    let fetchUrl = await fetchUrlData(URLopenWeather);
+    console.log("fetch url ", URLopenWeather);
+    let weatherDataJson = await fetchUrl.data;
+    console.log("weatherDataJson ", weatherDataJson);
+
+    let responseCode = +weatherDataJson.cod;
+    //console.log("responseCode ", weatherDataJson.cod);
+    //console.log("responseCode typeof ", typeof responseCode);
+
+    try {
+      switch (responseCode) {
+        case 404:
+          this.fetchCity.error = weatherDataJson.message;
+          this.fetchCity.status = "Failure";
+          break;
+        case 200:
+          this.activeCity = weatherDataJson;
+          console.log("activeCity ", this.activeCity);
+          this.fetchCity.status = "Success";
+          console.log("SUCESS");
+          localStorage.setItem(
+            "lastActiveCity",
+            JSON.stringify(this.activeCity)
+          );
+          break;
+        case 400:
+          this.fetchCity.error = "Incorrect request";
+          this.fetchCity.status = "Failure";
+          break;
+        default:
+          this.fetchCity.error = "Something went wrong";
+          this.fetchCity.status = "Failure";
+      }
+      console.log(this.fetchCity.error);
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  @action("Get Station from active city")
+  getStation = async () => {
+    //console.log("get station  pre", this.activeCity);
+
+    //console.log("get station ", Store);
+    if (this.cityName === "Lisbon") {
+      this.cityName = "Lisboa";
+    }
+
+    let activeCityName = this.cityName;
+    const stationURL = `${api.stationURL}q=${activeCityName}&key=${
+      api.METEOSTAT_KEY
+    }`;
+    // console.log(stationURL);
+    //GET STATION DATA AND CREATE ARRAY OBJECT WITH STATION ID
+    let fecthStationIdObjects = await axios(stationURL);
+    console.log("fecthStationIdObjects ", fecthStationIdObjects);
+    console.log("stationURL ", stationURL);
+    let fecthStationIdResponseJson = fecthStationIdObjects;
+    console.log("fecthStationIdResponseJson ", fecthStationIdResponseJson);
+    let fecthStationIdResponse = await fecthStationIdResponseJson.data;
+    let fecthStationIdResponseLength = await fecthStationIdResponse.data;
+    // Create an array with the station
+    let arrayPushData = [];
+    let j = 0;
+    for (j; j < fecthStationIdResponseLength.length; j++) {
+      arrayPushData.push(fecthStationIdResponse.data[j]);
+    }
+
+    this.arrayPushDataStation = arrayPushData;
+  };
+
+  @action("Get timezone from active city")
+  fetchTimezone = async () => {
+    let timezoneFetch = 0;
+    try {
+      if (!this.activeCityTimezone) {
+        this.activeCityTimezone = 0;
+      } else {
+        timezoneFetch = await this.activeCity.city.timezone;
+        this.activeCityTimezone = timezoneFetch;
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  @action("Get Historical Data from station")
+  fecthHistoricalData = async () => {
+    await this.fetchTimezone();
+    let station = await this.arrayPushDataStation;
+    let timezone = await this.activeCityTimezone;
+    // console.log("station ", station);
+    // console.log(timezone);
+    // GET HISTORICAL DATA FROM API
+    for (let i = 0; i < this.arrayPushDataStation.length; i++) {
+      const historicalURL = `https://api.meteostat.net/v1/history/monthly?station=${
+        station[i].id
+      }&start=1998-01&end=2018-12-11&time_zone=${timezone}&time_format=Y-m-d%20H:i&key=${
+        api.METEOSTAT_KEY
+      }
+      `;
+      let fetchHistoricalData = await fetch(historicalURL);
+      let fetchHistoricalDataJson = await fetchHistoricalData.json();
+      if (fetchHistoricalDataJson.data.length !== 0) {
+        this.activeStation = station[i].id;
+        break;
+      }
+    }
+
+    let historialDataFetch = await axios(`https://api.meteostat.net/v1/history/monthly?station=${
+      this.activeStation
+    }&start=1998-01&end=2018-12-11&time_zone=${timezone}&time_format=Y-m-d%20H:i&key=${
+      api.METEOSTAT_KEY
+    }
+    `);
+
+    // console.log("historialDataFetch", historialDataFetch);
+
+    this.historialWeatherData = historialDataFetch;
+    //  console.log("historical data ", this.historialWeatherData);
+  };
+
+  @action("Get latitude and Longitude for current city")
+  fetchCoordinates = async () => {
+    this.coordenatesLat = await this.activeCity.city.coord.lat;
+    this.coordenatesLon = await this.activeCity.city.coord.lon;
+  };
+
+  @action("get sunrise and sunset")
+  getSunRiseSunset = async () => {
+    await this.fetchCoordinates();
+    let latitudeProp = await this.coordenatesLat;
+    let longitudeProp = await this.coordenatesLon;
+    const URLsunsetSunrise = `${
+      api.URLsunsetSunrise
+    }lat=${latitudeProp}&lng=${longitudeProp}`;
+    let sunriseSunsetFetch = await fetch(URLsunsetSunrise);
+    let sunriseSunsetFetchJson = await sunriseSunsetFetch.json();
+    this.sunriseSunsetData = await sunriseSunsetFetchJson;
+  };
+
+  @action("Get current Moon Data")
+  fetchMoonPhase = async dt => {
+    let moonPhase = getMoonPhaseData(await dt);
+    return moonPhase;
+  };
+
+  @action("Is day or night")
+  dayOrNight = async () => {
+    let dayData = await this.activeCity.list[0].dt;
+    //  console.log(dayData);
+    this.dayOrNightData = dayOrNight(dayData);
+  };
+
+  @action("Autoupdate default city")
+  autoupdateDefaultCity = timeout => {
+    if (this.defaultCity)
+      setTimeout(
+        () => this.updateDateDefaultCity(this.defaultCity.name),
+        timeout
+      );
+  };
+
+  @action("Update date default city")
+  updateDateDefaultCity = async () => {
+    await this.getData();
+    if (this.defaultCity) {
+      await this.getData();
+    }
+  };
+
+  // check if city exists if not add it to citiesList Array
+  @action("add city to list")
+  addCityToList = async () => {
+    let exists = this.citiesList.findIndex(
+      city => city === this.activeCity.city.name
+    );
+    if (exists < 0) {
+      let URLopenWeather = `${api.URL}q=${
+        this.activeCity.city.name
+      }&units=metric&appid=${api.openWeatherKey}`;
+
+      let fetchUrl = await fetchUrlData(URLopenWeather);
+      // console.log("fetch url ", fetchUrl);
+      let weatherDataJson = await fetchUrl.data;
+      let cityLocalWeather = await weatherDataJson.list[0].main.temp;
+      // console.log("weatherDataJson ", weatherDataJson.list[0].main.temp);
+      let cityData = {
+        city: this.activeCity.city.name,
+        temp: cityLocalWeather
+      };
+
+      //console.log("responseCode typeof ", typeof responseCode);
+
+      //this.citiesList.push(this.activeCity.city.name, cityLocalWeather);
+      this.citiesList.push(cityData);
+      // console.log("city list ", this.citiesList);
+      localStorage.setItem("сitiesList", JSON.stringify(this.citiesList));
+    } else {
+      return null;
+    }
+  };
+
+  // Delete element from cities array based on it s index [id]
+  // store new array in browser cache
+  @action("delete city from list")
+  deleteCityFromList = id => {
+    let deleteCity = this.citiesList[id];
+    this.citiesList = arrayRemove(this.citiesList, deleteCity);
+    // console.log("delete pressed new cities list", this.citiesList);
+    localStorage.setItem("сitiesList", JSON.stringify(this.citiesList));
+  };
+
+  // set a default city using the activeCity var and deliverit to default city var
+  // store the data in browser cache
+  @action("set default city")
+  setDefaultCity = () => {
+    this.defaultCity = this.activeCity.city.name;
+    localStorage.setItem("defaultCity", JSON.stringify(this.defaultCity));
+    this.autoupdateDefaultCity(60000);
+  };
+
+  // current date array function
+  @action("current date")
+  currentDay = async () => {
+    let dayData = currentDay();
+    this.currentDateLocal = dayData;
+  };
+
+  @action("get all data")
+  getData = async () => {
+    this.isLoading = true;
+    this.loadingChart = true;
+    this.loadingMap = true;
+    this.loadingHistorical = true;
+    this.loadingGetStation = true;
+    this.currentDay()
+      .then(await this.getWeatherData(this.cityName))
+      .then(await this.getStation(this.cityName))
+      .then(await this.dayOrNight())
+      .then(
+        (this.moonPhaseData = await this.fetchMoonPhase(
+          this.currentDateLocal[2]
+        ))
+      )
+      .then(await this.getSunRiseSunset())
+      .then(await this.fecthHistoricalData())
+      .then(resp => {
+        this.isLoading = false;
+        this.loadingHistorical = false;
+        this.loadingChart = false;
+        this.loadingMap = false;
+      });
+
+    //await this.getCityCoordinates();
+
+    // console.log("Getting Data from getData", this.isLoading);
+    // await this.fetchMoonPhase();
+
+    // console.log("u data moon phase", u);
+
+    //console.log("After Getting Data from getData", this.isLoading);
+    //  console.log("Object Data ", this.activeCity.list[0].dt);
+    // console.log("get data this state ", this.state);
+    // console.log("weatherDataFetch ", appState.arrayPushDataStation);
+  };
+
+  @action("update weather data")
+  updateWeather = async () => {
+    await this.getData();
+  };
+}
+
+export default new Store();

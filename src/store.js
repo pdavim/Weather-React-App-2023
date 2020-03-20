@@ -2,7 +2,7 @@ import React from "react";
 
 import { EventEmitter } from "events";
 
-export default class Store extends React.Component {
+export default class StorePattern extends React.Component {
   constructor(props) {
     super(props);
 
@@ -10,7 +10,8 @@ export default class Store extends React.Component {
 
     //Main App State
     this.state = {
-      appName: "Weather Up"
+      appName: "Weather Up",
+      author: "Pedro Davim"
     };
   }
 
