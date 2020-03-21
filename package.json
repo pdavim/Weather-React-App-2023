@@ -17,6 +17,7 @@
     "@wbx/view-fusion-chart": "3.12.2",
     "apexcharts": "3.15.6",
     "axios": "0.19.2",
+    "babel-preset-mobx": "2.0.0",
     "bootstrap": "4.4.1",
     "country-list": "2.2.0",
     "fusioncharts": "3.15.1",

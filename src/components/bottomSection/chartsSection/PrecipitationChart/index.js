@@ -102,7 +102,6 @@ const PrecipitationChart = inject("Store")(
       //console.log("array 2 ", max);
     }
 
-    PrecipitationChart;
     const options = {
       xaxis: {
         categories: results
