@@ -133,100 +133,101 @@ const theme = createMuiTheme({
   }
 });
 
-@observer
-class App extends Component {
-  async updateWeather() {
-    let appState = stores.Store;
-    stores.Store.isLoading = true;
-    // console.log("isLoading", appState.isLoading);
-    await appState.getData(appState.cityName);
-    stores.Store.isLoading = false;
-  }
+const App = observer(
+  class App extends Component {
+    async updateWeather() {
+      let appState = stores.Store;
+      stores.Store.isLoading = true;
+      // console.log("isLoading", appState.isLoading);
+      await appState.getData(appState.cityName);
+      stores.Store.isLoading = false;
+    }
 
-  componentDidMount() {
-    // Accepts a Date object or date string that is recognized by the Date.parse() method
-    const { eventEmitter } = this.props;
-    let appState = stores.Store;
-    console.log("this.props.isGeolocationAvailable ", this.props);
-    // console.log("props ", state);
-    // console.log("appState ", appState);
+    componentDidMount() {
+      // Accepts a Date object or date string that is recognized by the Date.parse() method
+      const { eventEmitter } = this.props;
+      let appState = stores.Store;
+      console.log("this.props.isGeolocationAvailable ", this.props);
+      // console.log("props ", state);
+      // console.log("appState ", appState);
 
-    this.updateWeather();
-    // console.log("appstate ", appState);
-    //console.log("Store", stores);
-    // console.log("props ", state);
+      this.updateWeather();
+      // console.log("appstate ", appState);
+      //console.log("Store", stores);
+      // console.log("props ", state);
 
-    eventEmitter.on("updateWeather", async Mydata => {
-      appState.activeCity = Mydata;
-      console.log("Mydata ", Mydata);
-      await this.updateWeather();
-    });
-  }
-  render() {
-    let themeA = responsiveFontSizes(theme);
-    return (
-      <Provider {...stores}>
-        <ThemeProvider theme={themeA}>
-          <Router>
-            <Grid container spacing={1}>
-              <Grid container>
-                <Grid item xs={12}>
-                  <Header
-                    updateWeather={this.updateWeather}
-                    eventEmitter={this.props.eventEmitter}
-                    theme={themeA}
-                    props={stores}
-                  />
-                </Grid>
-                <Grid />
-              </Grid>
-
-              <Grid item xs={12}>
+      eventEmitter.on("updateWeather", async Mydata => {
+        appState.activeCity = Mydata;
+        console.log("Mydata ", Mydata);
+        await this.updateWeather();
+      });
+    }
+    render() {
+      let themeA = responsiveFontSizes(theme);
+      return (
+        <Provider {...stores}>
+          <ThemeProvider theme={themeA}>
+            <Router>
+              <Grid container spacing={1}>
                 <Grid container>
-                  <Grid className="topSection" item xs={8}>
-                    {stores.Store.isLoading === true ? (
-                      <h3>Loading Data...</h3>
-                    ) : stores.Store.isLoading === false ? (
-                      <TopSection
-                        theme={themeA}
-                        props={stores.Store}
-                        updateWeather={this.updateWeather}
-                        eventEmitter={this.props.eventEmitter}
-                      />
-                    ) : (
-                      <h3>No Data</h3>
-                    )}
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Sidebar
-                      theme={themeA}
+                  <Grid item xs={12}>
+                    <Header
                       updateWeather={this.updateWeather}
                       eventEmitter={this.props.eventEmitter}
+                      theme={themeA}
+                      props={stores}
                     />
                   </Grid>
+                  <Grid />
+                </Grid>
 
-                  <Grid className="bottomSection" item xs={12}>
-                    {stores.Store.loadingHistorical === true ? (
-                      <h3>Loading Data...</h3>
-                    ) : stores.Store.loadingHistorical === false ? (
-                      <BottomSection
+                <Grid item xs={12}>
+                  <Grid container>
+                    <Grid className="topSection" item xs={8}>
+                      {stores.Store.isLoading === true ? (
+                        <h3>Loading Data...</h3>
+                      ) : stores.Store.isLoading === false ? (
+                        <TopSection
+                          theme={themeA}
+                          props={stores.Store}
+                          updateWeather={this.updateWeather}
+                          eventEmitter={this.props.eventEmitter}
+                        />
+                      ) : (
+                        <h3>No Data</h3>
+                      )}
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Sidebar
                         theme={themeA}
-                        props={stores.Store}
                         updateWeather={this.updateWeather}
                         eventEmitter={this.props.eventEmitter}
                       />
-                    ) : (
-                      <h3>No Data</h3>
-                    )}
+                    </Grid>
+
+                    <Grid className="bottomSection" item xs={12}>
+                      {stores.Store.loadingHistorical === true ? (
+                        <h3>Loading Data...</h3>
+                      ) : stores.Store.loadingHistorical === false ? (
+                        <BottomSection
+                          theme={themeA}
+                          props={stores.Store}
+                          updateWeather={this.updateWeather}
+                          eventEmitter={this.props.eventEmitter}
+                        />
+                      ) : (
+                        <h3>No Data</h3>
+                      )}
+                    </Grid>
                   </Grid>
                 </Grid>
               </Grid>
-            </Grid>
-          </Router>
-        </ThemeProvider>
-      </Provider>
-    );
+            </Router>
+          </ThemeProvider>
+        </Provider>
+      );
+    }
   }
-}
+);
 
 export default App;
