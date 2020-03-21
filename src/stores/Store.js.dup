@@ -7,7 +7,7 @@ import dayOrNight from "../functions/dayOrNight";
 import arrayRemove from "../functions/arrayRemove";
 import currentDay from "../functions/currentDay";
 import fetchUrlData from "../functions/fetchUrlData";
-import fetchTimezone from "../functions/fetchTimezone"
+import fetchTimezone from "../functions/fetchTimezone";
 
 class Store {
   @observable fetchCity = {
@@ -178,25 +178,9 @@ class Store {
     this.arrayPushDataStation = arrayPushData;
   };
 
-  @action("Get timezone from active city")
-  fetchTimezone = async () => {
-    let timezoneFetch = 0;
-    try {
-      if (!this.activeCityTimezone) {
-        this.activeCityTimezone = 0;
-      } else {
-        timezoneFetch = await this.activeCity.city.timezone;
-        this.activeCityTimezone = timezoneFetch;
-      }
-    } catch (err) {
-      throw err;
-    }
-  };
-
-  
   @action("Get Historical Data from station")
   fecthHistoricalData = async () => {
-    await this.fetchTimezone(this.activeCityTimezone,this.activeCity.city.timezone);
+    await fetchTimezone(this.activeCityTimezone, this.activeCity.city.timezone);
     let station = await this.arrayPushDataStation;
     let timezone = await this.activeCityTimezone;
     // console.log("station ", station);

@@ -1,4 +1,4 @@
-import { observable, action } from "mobx";
+import { observable, action, decorate } from "mobx";
 import api from "../api/api";
 import dataFarm from "../assets/data/dataFarm";
 import axios from "axios";
@@ -10,90 +10,85 @@ import fetchUrlData from "../functions/fetchUrlData";
 import fetchTimezone from "../functions/fetchTimezone";
 
 class Store {
-  @observable fetchCity = {
+  fetchCity = {
     error: "",
     status: "Pending",
     loading: true
   };
 
-  @observable updateDefaultCity = {
+  updateDefaultCity = {
     error: "",
     status: "Pending",
     loading: true
   };
 
-  @observable loadingChart = true;
-  @observable loadingMap = true;
-  @observable loadingHistorical = true;
-  @observable loadingGetStation = true;
+  loadingChart = true;
+  loadingMap = true;
+  loadingHistorical = true;
+  loadingGetStation = true;
 
   //for test porpuses
-  @observable test = "hello world";
+  test = "hello world";
 
   //object with the code of active sattion - get data from fecthHistoricalData()
-  @observable activeStation;
+  activeStation;
 
   //Array object with all station - get data from getStation()
-  @observable arrayPushDataStation;
+  arrayPushDataStation;
 
   //Object with the searched city - get data from getWeatherData()
-  @observable activeCity;
+  activeCity;
 
   //Object with the searched city timezone - get data from fetchTimezone()
-  @observable activeCityTimezone;
+  activeCityTimezone;
 
   //Object with the searched city historical data - get data from fecthHistoricalData()
-  @observable historialWeatherData;
+  historialWeatherData;
 
   //Object with the searched city sunrise and sunnset data for the present day - get data from getSunRiseSunset()
-  @observable sunriseSunsetData;
+  sunriseSunsetData;
 
   //City coord - get data from fetchCoordinates()
-  @observable coordenatesLat;
-  @observable coordenatesLon;
+  coordenatesLat;
+  coordenatesLon;
 
   //Get current date
-  @observable currentDateLocal;
+  currentDateLocal;
 
   //city name
-  @observable cityName;
+  cityName;
 
   //maxTempDataChart data chart
-  @observable maxTempDataChart;
-  @observable raindaysChartData;
+  maxTempDataChart;
+  raindaysChartData;
 
-  @observable farmData = dataFarm;
+  farmData = dataFarm;
 
   //Loading
-  @observable isLoading;
+  isLoading;
 
   //dayOrNight
-  @observable dayOrNightData;
+  dayOrNightData;
 
-  @observable citiesDataArrayObs;
-
-  //CornovirusData
-  @observable getCoronaVirusDataArray;
+  citiesDataArrayObs;
 
   //MoonPhase Object
-  @observable moonPhaseData;
+  moonPhaseData;
   //Object with the SET default city - localstorage
-  @observable defaultCity =
-    JSON.parse(localStorage.getItem("defaultCity")) || null;
+  defaultCity = JSON.parse(localStorage.getItem("defaultCity")) || null;
 
   //Object with the SET default Station - localstorage
-  @observable defaultStation =
-    JSON.parse(localStorage.getItem("defaultStation")) || null;
+  defaultStation = JSON.parse(localStorage.getItem("defaultStation")) || null;
 
   //Object with the SET list of added cities - localstorage
-  @observable citiesList = JSON.parse(localStorage.getItem("сitiesList")) || [];
+  citiesList = JSON.parse(localStorage.getItem("сitiesList")) || [];
 
   constructor(cityName, activeCity) {
     this.autoupdateDefaultCity(9000);
     //this.cityName = "porto";
   }
 
-  @action("get Weather")
+  //@action("get Weather")
   getWeatherData = async () => {
     if (!this.cityName && this.defaultCity) {
       this.cityName = this.defaultCity;
@@ -146,7 +141,7 @@ class Store {
     }
   };
 
-  @action("Get Station from active city")
+  // @action("Get Station from active city")
   getStation = async () => {
     //console.log("get station  pre", this.activeCity);
 
@@ -178,7 +173,7 @@ class Store {
     this.arrayPushDataStation = arrayPushData;
   };
 
-  @action("Get Historical Data from station")
+  // @action("Get Historical Data from station")
   fecthHistoricalData = async () => {
     await fetchTimezone(this.activeCityTimezone, this.activeCity.city.timezone);
     let station = await this.arrayPushDataStation;
@@ -214,13 +209,13 @@ class Store {
     //  console.log("historical data ", this.historialWeatherData);
   };
 
-  @action("Get latitude and Longitude for current city")
+  // @action("Get latitude and Longitude for current city")
   fetchCoordinates = async () => {
     this.coordenatesLat = await this.activeCity.city.coord.lat;
     this.coordenatesLon = await this.activeCity.city.coord.lon;
   };
 
-  @action("get sunrise and sunset")
+  // @action("get sunrise and sunset")
   getSunRiseSunset = async () => {
     await this.fetchCoordinates();
     let latitudeProp = await this.coordenatesLat;
@@ -233,20 +228,20 @@ class Store {
     this.sunriseSunsetData = await sunriseSunsetFetchJson;
   };
 
-  @action("Get current Moon Data")
+  //@action("Get current Moon Data")
   fetchMoonPhase = async dt => {
     let moonPhase = getMoonPhaseData(await dt);
     return moonPhase;
   };
 
-  @action("Is day or night")
+  //@action("Is day or night")
   dayOrNight = async () => {
     let dayData = await this.activeCity.list[0].dt;
     //  console.log(dayData);
     this.dayOrNightData = dayOrNight(dayData);
   };
 
-  @action("Autoupdate default city")
+  // @action("Autoupdate default city")
   autoupdateDefaultCity = timeout => {
     if (this.defaultCity)
       setTimeout(
@@ -255,7 +250,7 @@ class Store {
       );
   };
 
-  @action("Update date default city")
+  //@action("Update date default city")
   updateDateDefaultCity = async () => {
     await this.getData();
     if (this.defaultCity) {
@@ -264,7 +259,7 @@ class Store {
   };
 
   // check if city exists if not add it to citiesList Array
-  @action("add city to list")
+  //@action("add city to list")
   addCityToList = async () => {
     let exists = this.citiesList.findIndex(
       city => city === this.activeCity.city.name
@@ -297,7 +292,7 @@ class Store {
 
   // Delete element from cities array based on it s index [id]
   // store new array in browser cache
-  @action("delete city from list")
+  //@action("delete city from list")
   deleteCityFromList = id => {
     let deleteCity = this.citiesList[id];
     this.citiesList = arrayRemove(this.citiesList, deleteCity);
@@ -307,7 +302,7 @@ class Store {
 
   // set a default city using the activeCity var and deliverit to default city var
   // store the data in browser cache
-  @action("set default city")
+  // @action("set default city")
   setDefaultCity = () => {
     this.defaultCity = this.activeCity.city.name;
     localStorage.setItem("defaultCity", JSON.stringify(this.defaultCity));
@@ -315,13 +310,13 @@ class Store {
   };
 
   // current date array function
-  @action("current date")
+  // @action("current date")
   currentDay = async () => {
     let dayData = currentDay();
     this.currentDateLocal = dayData;
   };
 
-  @action("get all data")
+  // @action("get all data")
   getData = async () => {
     this.isLoading = true;
     this.loadingChart = true;
@@ -359,10 +354,58 @@ class Store {
     // console.log("weatherDataFetch ", appState.arrayPushDataStation);
   };
 
-  @action("update weather data")
+  //@action("update weather data")
   updateWeather = async () => {
     await this.getData();
   };
 }
+
+decorate(Store, {
+  //observable
+  fetchCity: observable,
+  updateDefaultCity: observable,
+  loadingChart: observable,
+  loadingMap: observable,
+  loadingHistorical: observable,
+  loadingGetStation: observable,
+  isLoading: observable,
+  test: observable,
+  activeStation: observable,
+  arrayPushDataStation: observable,
+  activeCity: observable,
+  activeCityTimezone: observable,
+  historialWeatherData: observable,
+  sunriseSunsetData: observable,
+  coordenatesLat: observable,
+  coordenatesLon: observable,
+  currentDateLocal: observable,
+  cityName: observable,
+  maxTempDataChart: observable,
+  raindaysChartData: observable,
+  farmData: observable,
+  dayOrNightData: observable,
+  citiesDataArrayObs: observable,
+  moonPhaseData: observable,
+  defaultCity: observable,
+  defaultStation: observable,
+  citiesList: observable,
+
+  //action
+  getWeatherData: action,
+  getStation: action,
+  fecthHistoricalData: action,
+  fetchCoordinates: action,
+  getSunRiseSunset: action,
+  fetchMoonPhase: action,
+  dayOrNight: action,
+  autoupdateDefaultCity: action,
+  updateDateDefaultCity: action,
+  addCityToList: action,
+  deleteCityFromList: action,
+  setDefaultCity: action,
+  currentDay: action,
+  getData: action,
+  updateWeather: action
+});
 
 export default new Store();
