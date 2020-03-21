@@ -88,7 +88,6 @@ const AreaCharts = inject("Store")(
     }
     //  console.log("Array Max Temp ", array);
 
-    AreaCharts;
     const options = {
       xaxis: {
         name: "Year",

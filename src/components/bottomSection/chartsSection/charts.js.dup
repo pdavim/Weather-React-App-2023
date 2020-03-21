@@ -27,45 +27,36 @@ const Charts = inject("Store")(
 
     let historicaldataArray = props.Store.historialWeatherData;
     let historicaldataArrayLength = props.Store.historialWeatherData.data;
-    console.log("historical data array ", historicaldataArray);
+    //console.log("historical data array ", historicaldataArray);
     let array = [];
 
-    const arrayData = async () => {
-      for (let i = 0; i < historicaldataArrayLength.length; i++) {
-        console.log(
-          "max temp array ",
-          historicaldataArray.data[i].temperature_max
-        );
-        array.push([
-          historicaldataArray.data[i].temperature_max,
-          historicaldataArray.data[i].month
-        ]);
-      }
-    };
-
+    for (let i = 0; i < historicaldataArrayLength.length; i++) {
+      // console.log(historicaldataArray.data[i].temperature_max);
+      array.push([
+        historicaldataArray.data[i].temperature_max,
+        historicaldataArray.data[i].month
+      ]);
+    }
     console.log("array", array);
-    const maxTempData = async () => {
-      await arrayData();
-      if (array.length === 0) {
-        console.log("array no adata");
-        return;
-      } else {
-        console.log("array has adata");
-        for (let i = 0; i < historicaldataArray.length; i++) {
-          array.push(historicaldataArray.data[i].temperature_max);
-        }
-        let max = array.reduce(function(prev, current) {
-          return prev > current ? prev : current;
-        });
-
-        Store.maxTempDataChart = max;
-
-        console.log("maxTemp Store ", Store.maxTempDataChart);
-        // console.log("array 2 ", max);
+    if (array.length === 0) {
+      console.log("array no adata");
+      return;
+    } else {
+      console.log("array has adata");
+      for (let i = 0; i < historicaldataArray.length; i++) {
+        array.push(historicaldataArray.data[i].temperature_max);
       }
-    };
+      let max = array.reduce(function(prev, current) {
+        return prev > current ? prev : current;
+      });
+
+      Store.maxTempDataChart = max;
+
+      // console.log("maxTemp Store ", Store.maxTempDataChart);
+      // console.log("array 2 ", max);
+    }
     // console.log("Array Max Temp ", array);
-    maxTempData();
+
     return (
       <Router>
         <Toolbar>
@@ -112,7 +103,9 @@ const Charts = inject("Store")(
                   <Link to="/precipitationData">Precipitation</Link>
                 </Button>
               </Grid>
-
+              <Grid item>
+                <Button variant="contained" color={colorText} />
+              </Grid>
               <Grid item>
                 <Button variant="contained" color={colorText}>
                   <Link to="/contact">Contact</Link>
@@ -162,16 +155,16 @@ const TempData = inject("Store")(
     console.log("temp data ", Store);
     const { data } = Store.historialWeatherData;
 
-    // let maxTempView = "Max Temp " + Store.maxTempDataChart[0];
-    //let maxTempYearView = "Year " + Store.maxTempDataChart[1];
-    //let maxTempDataView = maxTempView + ", " + maxTempYearView;
+    let maxTempView = "Max Temp " + Store.maxTempDataChart[0];
+    let maxTempYearView = "Year " + Store.maxTempDataChart[1];
+    let maxTempDataView = maxTempView + ", " + maxTempYearView;
 
     return (
       <Card>
-        <CardHeader title="Temp Data" />
+        <CardHeader title="Temp Data" subheader={maxTempDataView} />
 
         <CardContent>
-          <AreaCharts />
+          <AreaCharts props={data} />
         </CardContent>
       </Card>
     );
@@ -187,7 +180,7 @@ const RainDaysData = inject("Store")(
 
     return (
       <Card>
-        <RainCharts props={props} />
+        <RainCharts props={data} />
       </Card>
     );
   })
@@ -200,7 +193,7 @@ const PrecipitationData = inject("Store")(
 
     return (
       <Card>
-        <PrecipitationChart />
+        <PrecipitationChart props={data} />
       </Card>
     );
   })

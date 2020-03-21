@@ -58,19 +58,6 @@ const RainCharts = inject("Store")(
     // console.log("minTempArray ", minTempArray);
     //console.log("yearMonthArray ", yearMonthArray);
 
-    //var sorted_arr = yearMonthArray.sort(); // You can define the comparing function here.
-    // JS by default uses a crappy string compare.
-
-    // console.log("results ", results);
-
-    // let historicaldataArrayLength = props.Store.historial;
-
-    //console.log("historl data array ", historicaldataArray);
-
-    //console.log("Array rain days ", rainArray);
-    //  for(let i = 0;  i<)
-    //let array2 = [];
-
     if (rainArray.length === 0) {
       return;
     } else {
@@ -104,7 +91,6 @@ const RainCharts = inject("Store")(
 
     let seriedata = rainDaysArray + " " + results;
 
-    RainCharts;
     const options = {
       xaxis: {
         categories: results
