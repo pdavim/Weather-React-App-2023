@@ -20,7 +20,7 @@
     "@syncfusion/ej2-react-charts": "17.4.47",
     "@wbx/view-fusion-chart": "3.12.2",
     "apexcharts": "3.15.6",
-    "axios": "0.19.2",
+    "axios": "1.6.0",
     "babel-preset-mobx": "2.0.0",
     "bootstrap": "4.4.1",
     "country-list": "2.2.0",
